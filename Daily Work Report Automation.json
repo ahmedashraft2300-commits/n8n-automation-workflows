@@ -1,0 +1,589 @@
+{
+  "name": "Daily Work Report Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 16,
+              "triggerAtMinute": 45
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        -16
+      ],
+      "id": "08938194-8ce1-4c21-8443-5d39e8c86ca6",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1SVmtJ8FwhYP2TcqV321Yr2iiyKv3nkKurdbsk-ODyAo",
+          "mode": "list",
+          "cachedResultName": "n8n Daily Work Report",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SVmtJ8FwhYP2TcqV321Yr2iiyKv3nkKurdbsk-ODyAo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SVmtJ8FwhYP2TcqV321Yr2iiyKv3nkKurdbsk-ODyAo/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Date",
+              "lookupValue": "={{ $now.setZone('Africa/Cairo').toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "lookupColumn": "Reported",
+              "lookupValue": "no"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -176,
+        -16
+      ],
+      "id": "3fae5216-90b7-46de-a83b-8b59b160e52f",
+      "name": "Get row(s) in sheet",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ok37xhPo3rIIW4bD",
+          "name": "n8n Daily Work Report"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "tasks",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -16
+      ],
+      "id": "cb9da949-17d6-400d-bbe1-2656c7b1225e",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=أنت مسؤول عن إعداد تقرير أعمال يومي احترافي باللغة العربية\n\nاعتمد فقط على بيانات المهام الموجودة في الأسفل\n\nقواعد إلزامية:\n- لا تكرر أي مهمة في أكثر من قسم\n- لا تكتب التعليمات الموجودة في هذا البرومبت داخل التقرير\n- لا تضف أي معلومات غير موجودة\n- لا تستخدم عبارات عامة مثل تم إتمام مهمات الأعمال اليومية\n- استخدم تفاصيل المهمة عند إعادة الصياغة\n- المهمة التي حالتها done تعتبر مهمة منجزة\n- لا تنشئ قسم المهام قيد التنفيذ إلا إذا كانت هناك مهمة حالتها ليست done\n- اكتب ملخص اليوم في جملة واحدة فقط بدون إعادة سرد أسماء المهام\n- لا تعرض JSON أو أسماء الحقول\n- ابدأ مباشرة بالتقرير\n\nالشكل المطلوب:\n\nتقرير الأعمال اليومي\n\nملخص اليوم:\nجملة واحدة مختصرة توضح نوع الأعمال التي تم العمل عليها اليوم\n\nالمهام المنجزة:\n- صياغة احترافية للمهمة مع تفاصيلها\n- صياغة احترافية للمهمة مع تفاصيلها\n\nإذا وجدت مهام غير مكتملة أضف فقط:\n\nالمهام قيد التنفيذ:\n- المهمة\n\nبيانات المهام:\n\n{{ $json.tasks.map((t, i) => `${i + 1}\nالمهمة: ${t.Task.trim()}\nالتفاصيل: ${t.Details.trim()}\nالحالة: ${t.Status.trim()}`).join('\\n\\n') }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        272,
+        -16
+      ],
+      "id": "6e1cd045-6d6b-4a60-8cbe-5232b9340ec9",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:1b",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        352,
+        128
+      ],
+      "id": "2cda2004-cf4c-42fe-8aa6-44132e9b6384",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "vM5Itdk1u5jJ1Fvj",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "folderId": "18SXAIj9RwC4yt75fY7Hnf_VCEssfgdcu",
+        "title": "=Daily Work Report - {{ $now.setZone('Africa/Cairo').toFormat('yyyy-MM-dd') }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        816,
+        -16
+      ],
+      "id": "ac472f0f-6ec0-468f-adc7-f7e4b870c63f",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "bSrupxzXuwqfCIGx",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ \n'تقرير الأعمال اليومي\\n\\n' +\n'التاريخ: ' + $now.setZone('Africa/Cairo').toFormat('dd-MM-yyyy') + '\\n\\n' +\n'المهام المنجزة:\\n\\n' +\n$('Aggregate').first().json.tasks\n  .map((t, i) => `${i + 1}- ${t.Task.trim()}`)\n  .join('\\n\\n')\n}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        -16
+      ],
+      "id": "a627f283-868c-4b36-bc16-8f6f0fc6f00f",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "bSrupxzXuwqfCIGx",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Create a document').first().json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          },
+          "fileName": "=Daily Work Report - {{ $now.setZone('Africa/Cairo').toFormat('dd-MM-yyyy') }}.pdf"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1424,
+        -16
+      ],
+      "id": "6568c359-cd10-43d2-b58b-c3a3037c6be7",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rOupseBPw6MykEIo",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "5619643934",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=تقرير الأعمال اليومي - {{ $now.setZone('Africa/Cairo').toFormat('dd-MM-yyyy') }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        -16
+      ],
+      "id": "37b5a2b1-ccf5-4144-9bcf-c6f9be87e541",
+      "name": "Send a document",
+      "webhookId": "67c8e7f7-0bb0-4c91-bead-50373c7d01eb",
+      "credentials": {
+        "telegramApi": {
+          "id": "myqy6Ky9xhEkri2U",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        -16
+      ],
+      "id": "0f4e0b57-b1fb-493d-bb95-003c0d7f270d",
+      "name": "Wait",
+      "webhookId": "2c6e83fd-05a5-4663-be22-baddb90b4662"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Aggregate').first().json.tasks.map(t => ({\n  json: {\n    row_number: t.row_number,\n    Reported: 'yes'\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        432
+      ],
+      "id": "3c469d9b-fb50-47e7-9f26-6ebe470985f8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1SVmtJ8FwhYP2TcqV321Yr2iiyKv3nkKurdbsk-ODyAo",
+          "mode": "list",
+          "cachedResultName": "n8n Daily Work Report",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SVmtJ8FwhYP2TcqV321Yr2iiyKv3nkKurdbsk-ODyAo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SVmtJ8FwhYP2TcqV321Yr2iiyKv3nkKurdbsk-ODyAo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Task": "={{ $json.Task }}",
+            "Reported": "yes"
+          },
+          "matchingColumns": [
+            "Task"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Task",
+              "displayName": "Task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reported",
+              "displayName": "Reported",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1632,
+        624
+      ],
+      "id": "62f02843-b132-469a-bd58-f63f0eb82499",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ok37xhPo3rIIW4bD",
+          "name": "n8n Daily Work Report"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "يجمع مهام اليوم من Google Sheets\nينظم البيانات ويجهز التقرير\nينشئ Google Doc\nيصدر التقرير PDF\nيرسله على Telegram\nثم يحدث حالة Reported إلى Yes",
+        "height": 592,
+        "width": 752,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        336,
+        -992
+      ],
+      "typeVersion": 1,
+      "id": "dddcd128-e559-45e3-9701-981fb99a52b2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "1. Daily Tasks Collection\n\nتشغيل يومي الساعة 4:45 PM\nجلب مهام اليوم التي Reported = no\nتجميع المهام في قائمة واحدة",
+        "height": 384,
+        "width": 640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "b3c2cce8-3e81-490b-bb22-f3c4bcf9b7ef",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "2. AI Processing\n\nتنظيم بيانات المهام\nإعادة صياغة التقرير عند الحاجة\nModel: Qwen 2.5 3B",
+        "height": 464,
+        "width": 368,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        240,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "c2aa3d10-1ee6-4bea-b3fb-84d0a7e3d425",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "3. Report Generation\n\nإنشاء Google Doc جديد\nإضافة مهام اليوم\nالانتظار حتى يتم حفظ المستند\nتحويل التقرير إلى PDF",
+        "height": 416,
+        "width": 864,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        704,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "82f14994-14b8-4be9-95db-d631e84a0ed0",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "4. Report Delivery\n\nإرسال التقرير اليومي كملف PDF\nعلى Telegram",
+        "height": 272,
+        "width": 256,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1776,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "5f95028d-b08c-40a9-8ad2-5092d4fb146c",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "5. Mark Tasks as Reported\n\nبعد نجاح إرسال التقرير\nيتم تغيير Reported من no إلى yes\nلمنع إرسال نفس المهام مرة أخرى",
+        "height": 544,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1504,
+        256
+      ],
+      "typeVersion": 1,
+      "id": "c68c2c31-1f72-40a0-aca9-02e6c6bce023",
+      "name": "Sticky Note5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a document": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Africa/Cairo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "9ea120f7-98ae-4ad8-8dbe-0c04027465cc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b7180453ad31f20c569758a09e99be8b4bdce7cf1dcc88f0ecbc68d40b4134ae"
+  },
+  "nodeGroups": [],
+  "id": "C7bBl1J5DZJ9MGOM",
+  "tags": []
+}
